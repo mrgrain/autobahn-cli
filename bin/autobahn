@@ -1,11 +1,15 @@
 #!/usr/bin/env php
 <?php
-// application.php
-
 require __DIR__ . '/../vendor/autoload.php';
 
-use Symfony\Component\Console\Application;
+use Autobahn\Cli\Application;
+use Autobahn\Cli\Commands\EnvCommand;
 
+// Setup application
 $application = new Application('Autobahn CLI', '1.0.0-alpha1');
-//$application->add(new GreetCommand());
+
+// Add commands
+$application->add(new EnvCommand());
+
+// Run application
 $application->run();
