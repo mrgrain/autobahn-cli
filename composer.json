@@ -1,0 +1,24 @@
+{
+  "name": "mrgrain/autobahn-cli",
+  "description": "Command line interface for Autobahn. Supports you with installing and configuring your WordPress.",
+  "type": "project",
+  "require": {
+    "symfony/console": "^3.0"
+  },
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Moritz Kornher",
+      "email": "mail@moritzkornher.de"
+    }
+  ],
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Autobahn\\Cli": "src"
+    }
+  },
+  "bin": [
+    "bin/autobahn"
+  ]
+}

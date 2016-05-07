@@ -1,0 +1,11 @@
+#!/usr/bin/env php
+<?php
+// application.php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+
+$application = new Application('Autobahn CLI', '1.0.0-alpha1');
+//$application->add(new GreetCommand());
+$application->run();
