@@ -1,17 +1,19 @@
 <?php
 namespace Autobahn\Cli\Commands\Keys;
 
-use Symfony\Component\Console\Command\Command;
+use Autobahn\Cli\Commands\Env\EnvCommand;
+use Autobahn\Cli\Contracts\Dotenv;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * Class GenerateCommand
  * Generate new WordPress keys and salts.
  * @package Autobahn\Cli\Commands\Keys
  */
-class GenerateCommand extends Command
+class GenerateCommand extends EnvCommand
 {
     /**
      * List of required WordPress keys and salts
@@ -38,17 +40,18 @@ class GenerateCommand extends Command
             ->setName('keys:generate')
             ->setDescription('Generate new WordPress keys and salts')
             ->addOption(
-                'secure',
-                's',
+                'override',
+                'o',
                 InputOption::VALUE_NONE,
-                'Ask before overriding existing keys and salts'
+                'Overriding existing keys without asking'
             )
             ->addOption(
                 'export',
                 null,
                 InputOption::VALUE_NONE,
-                'Prefix lines with <code>export</code> so you can <code>source</code> the file in bash'
+                'Prefix lines with <code>export</code> so you can source the file in bash'
             );
+        parent::configure();
     }
 
     /**
@@ -56,28 +59,58 @@ class GenerateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        // get options
-        $secure = $input->getOption('secure');
+        // retrieve arguments
         $export = $input->getOption('export');
+        $override = $input->getOption('override');
 
-        // add every key
-        foreach ($this->keys as $key) {
-            if ($output->isVerbose()) {
-                $output->writeln($this->composeLine($key, $this->randomKey(64), $export));
-            }
+        // questions
+        $helper = $this->getHelper('question');
+        $override_question = (new ConfirmationQuestion(
+            "<question>WordPress Keys already exists. Override?</question> (yes/NO)" . PHP_EOL,
+            false
+        ));
+
+        // prepare dotenv access
+        $dotenv = $this->getDotenv($this->getFilePath($input));
+
+        // abort if not overriding
+        if (!$override && $this->anyKeyExists($dotenv) && !$helper->ask($input, $output, $override_question)) {
+            $output->writeln('<error>Aborting</error>');
+            return 1;
         }
+
+        // generate and add all keys
+        $data = [];
+        foreach ($this->keys as $key) {
+            $dotenv->set($key, $this->randomKey(64), $export);
+            $data[$key] = $dotenv->get($key);
+        }
+
+        // list added keys
+        if ($output->isVerbose()) {
+            $this->formatVariables($output, $data, "WordPress Key")->render();
+        }
+
+        // confirm writing
+        if (!$output->isQuiet()) {
+            $output->writeln('<info>WordPress keys successfully written to file.</info>');
+        }
+        return 0;
     }
 
     /**
-     * Compose the dotenv line from given input
-     * @param $name
-     * @param $value
-     * @param bool $export
-     * @return string
+     * Determine if any WordPres key already exists in the dotenv file
+     * @param Dotenv $dotenv
+     * @return bool
      */
-    protected function composeLine($name, $value, $export = false)
+    protected function anyKeyExists(Dotenv $dotenv)
     {
-        return sprintf('%s%s="%s"', ($export ? 'export ' : ''), $name, addcslashes($value, '"\\'));
+        foreach ($this->keys as $key) {
+            if ($dotenv->has($key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

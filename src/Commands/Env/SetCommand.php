@@ -69,7 +69,7 @@ class SetCommand extends EnvCommand
         // prepare dotenv access
         $dotenv = $this->getDotenv($this->getFilePath($input));
 
-        // abort if overriding
+        // abort if not overriding
         if ($secure && $dotenv->has($name) && !$helper->ask($input, $output, $override_question)) {
             $output->writeln('<error>Aborting</error>');
             return 1;
