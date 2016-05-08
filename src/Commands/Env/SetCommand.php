@@ -62,7 +62,7 @@ class SetCommand extends EnvCommand
         // questions
         $helper = $this->getHelper('question');
         $override_question = (new ConfirmationQuestion(
-            "<question>Environment variable <code>$name</code> already exists. Override?</question> (yes/NO)" . PHP_EOL,
+            "<question>Environment variable <code>$name</code> already exists. Override?</question> [y/N]",
             false
         ));
 
