@@ -4,12 +4,19 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Autobahn\Cli\Application;
 use Autobahn\Cli\Commands\EnvCommand;
+use Autobahn\Cli\Commands\Keys\DisplayCommand;
+use Autobahn\Cli\Commands\Keys\GenerateCommand;
 
 // Setup application
 $application = new Application('Autobahn CLI', '1.0.0-alpha1');
 
 // Add commands
 $application->add(new EnvCommand());
+{
+    // keys
+    $application->add(new GenerateCommand());
+    $application->add(new DisplayCommand());
+}
 
 // Run application
 $application->run();

@@ -19,7 +19,7 @@ class Application extends \Symfony\Component\Console\Application
         parent::configureIO($input, $output);
 
         // code style
-        $style = new OutputFormatterStyle('black', 'white');
-        $output->getFormatter()->setStyle('code', $style);
+        $code = new OutputFormatterStyle('black', 'white');
+        $output->getFormatter()->setStyle('code', $code);
     }
 }

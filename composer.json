@@ -3,7 +3,9 @@
   "description": "Command line interface for Autobahn. Supports you with installing and configuring your WordPress.",
   "type": "project",
   "require": {
-    "symfony/console": "^3.0"
+    "symfony/console": "^3.0",
+    "paragonie/random_compat": "^2.0",
+    "vlucas/phpdotenv": "^2.2"
   },
   "license": "GPL-3.0+",
   "authors": [
