@@ -66,7 +66,7 @@ class GenerateCommand extends EnvCommand
         // questions
         $helper = $this->getHelper('question');
         $override_question = (new ConfirmationQuestion(
-            "<question>WordPress Keys already exists. Override?</question> (yes/NO)" . PHP_EOL,
+            "<question>WordPress keys already exists. Override?</question> (yes/NO)" . PHP_EOL,
             false
         ));
 

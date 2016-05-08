@@ -97,7 +97,7 @@ class Dotenv extends Loader implements DotenvContract
         $line = $this->composeLine($variable, $value, $export);
         $number = $this->has($variable) ? $this->line_numbers[$variable] : null;
         $this->writeLine($line, $number);
-//        $this->load();
+        $this->load();
 
         return $line;
     }
