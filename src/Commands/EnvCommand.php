@@ -1,12 +1,13 @@
 <?php
 namespace Autobahn\Cli\Commands;
 
+use Autobahn\Cli\Utils\Dotenv;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * Class EnvCommand
@@ -26,19 +27,31 @@ class EnvCommand extends Command
             ->addArgument(
                 'name',
                 InputArgument::REQUIRED,
-                'Which variable do you want to set?'
+                'The variable to set'
             )
             ->addOption(
                 'value',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'What value do you want to set it to?'
+                'Value of the variable'
+            )
+            ->addOption(
+                'secure',
+                's',
+                InputOption::VALUE_NONE,
+                'Ask before overriding existing variables'
             )
             ->addOption(
                 'export',
                 null,
                 InputOption::VALUE_NONE,
-                'Prefix lines with <code>export</code> so you can <code>source</code> the file in bash'
+                'Prefix lines with <code>export</code> so you can source the file in bash'
+            )
+            ->addOption(
+                'file',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Filepath of the dotenv file. Defaults to "./.env".'
             );
     }
 
@@ -51,19 +64,34 @@ class EnvCommand extends Command
         $name = $input->getArgument('name');
         $value = $input->getOption('value');
         $export = $input->getOption('export');
+        $secure = $input->getOption('secure');
+        $file = $input->getOption('file') ?: getcwd() . DIRECTORY_SEPARATOR . '.env';
 
-        $output->writeln($this->composeLine($name, $value, $export));
-    }
+        // questions
+        $helper = $this->getHelper('question');
+        $override_question = (new ConfirmationQuestion(
+            "<question>Environment variable <code>$name</code> already exists. Override?</question> (yes/NO)" . PHP_EOL,
+            false
+        ));
 
-    /**
-     * Compose the dotenv line from given input
-     * @param $name
-     * @param $value
-     * @param bool $export
-     * @return string
-     */
-    protected function composeLine($name, $value, $export = false)
-    {
-        return sprintf('%s%s="%s"', ($export ? 'export ' : ''), $name, addcslashes($value, '"\\'));
+        // prepare dotenv access
+        $dotenv = new Dotenv($file);
+
+        // abort if overriding
+        if ($secure && $dotenv->has($name) && !$helper->ask($input, $output, $override_question)) {
+            $output->writeln('<error>Aborting.</error>');
+            return 1;
+        }
+
+        // write new value
+        $result = $dotenv->set($name, $value, (bool)$export);
+        if ($output->isVerbose()) {
+            $output->writeln($result);
+        }
+
+        if (!$output->isQuiet()) {
+            $output->writeln('<info>Variable successfully written to file.</info>');
+        }
+        return 0;
     }
 }
