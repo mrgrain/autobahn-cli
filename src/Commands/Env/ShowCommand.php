@@ -23,7 +23,7 @@ class ShowCommand extends EnvCommand
             ->setDescription('Show an environmental variable from the dotenv file')
             ->addArgument(
                 'name',
-                InputArgument::REQUIRED,
+                InputArgument::OPTIONAL,
                 'The variable to set'
             )
             ->addOption(
@@ -46,11 +46,20 @@ class ShowCommand extends EnvCommand
         // prepare dotenv access
         $dotenv = $this->getDotenv($this->getFilePath($input));
 
-        // display variable
-        if ($dotenv->has($name)) {
-            $this->formatVariables($output, [$name => $dotenv->get($name)]);
+        // display all variables
+        if (!$name) {
+            $this->formatVariables($output, $dotenv->getAll())->render();
+            return 0;
         }
 
+        // display a single variable
+        if ($dotenv->has($name)) {
+            $this->formatVariables($output, [$name => $dotenv->get($name)])->render();
+            return 0;
+        }
+
+        // variable does not exists
+        $output->writeln('<error>Environment variable <code>' . $name . '</code> not found in "' . $this->getFilePath($input) . '"</error>');
         return 0;
     }
 }
