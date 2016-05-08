@@ -71,18 +71,18 @@ class SetCommand extends EnvCommand
 
         // abort if overriding
         if ($secure && $dotenv->has($name) && !$helper->ask($input, $output, $override_question)) {
-            $output->writeln('<error>Aborting.</error>');
+            $output->writeln('<error>Aborting</error>');
             return 1;
         }
 
         // write new value
-        $result = $dotenv->set($name, $value, (bool)$export);
+        $dotenv->set($name, $value, (bool)$export);
         if ($output->isVerbose()) {
-            $output->writeln($result);
+            $this->formatVariables($output, [$name => $dotenv->get($name)])->render();
         }
 
         if (!$output->isQuiet()) {
-            $output->writeln('<info>Variable successfully written to file.</info>');
+            $output->writeln('<info>Environment Variable successfully written to file.</info>');
         }
         return 0;
     }

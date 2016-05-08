@@ -3,8 +3,10 @@ namespace Autobahn\Cli\Commands\Env;
 
 use Autobahn\Cli\Utils\Dotenv;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class EnvCommand
@@ -51,5 +53,24 @@ abstract class EnvCommand extends Command
     protected function getDotenv($file)
     {
         return new Dotenv($file);
+    }
+
+    /**
+     * @param OutputInterface $output
+     * @param array $data
+     * @param string $column1
+     * @param string $column2
+     * @return Table
+     */
+    protected function formatVariables(OutputInterface $output, array $data, $column1 = 'Environment Variable', $column2 = "Value")
+    {
+        $table = new Table($output);
+        $table
+            ->setHeaders([$column1, $column2]);
+
+        foreach ($data as $name => $value) {
+            $table->addRow([$name, $value]);
+        }
+        return $table;
     }
 }

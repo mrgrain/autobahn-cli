@@ -46,9 +46,9 @@ class ShowCommand extends EnvCommand
         // prepare dotenv access
         $dotenv = $this->getDotenv($this->getFilePath($input));
 
-        // abort if overriding
+        // display variable
         if ($dotenv->has($name)) {
-            $output->writeln($dotenv->get($name));
+            $this->formatVariables($output, [$name => $dotenv->get($name)]);
         }
 
         return 0;

@@ -3,10 +3,10 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Autobahn\Cli\Application;
-use Autobahn\Cli\Commands\Env\SetCommand;
-use Autobahn\Cli\Commands\Env\ShowCommand;
-use Autobahn\Cli\Commands\Keys\DisplayCommand;
-use Autobahn\Cli\Commands\Keys\GenerateCommand;
+use Autobahn\Cli\Commands\Env\SetCommand as EnvSet;
+use Autobahn\Cli\Commands\Env\ShowCommand as EnvShow;
+use Autobahn\Cli\Commands\Keys\GenerateCommand as KeysGenerate;
+use Autobahn\Cli\Commands\Keys\ShowCommand as KeysShow;
 
 // Setup application
 $application = new Application('Autobahn CLI', '1.0.0-alpha1');
@@ -14,13 +14,13 @@ $application = new Application('Autobahn CLI', '1.0.0-alpha1');
 // commands
 {
     // env
-    $application->add(new SetCommand());
-    $application->add(new ShowCommand());
+    $application->add(new EnvSet());
+    $application->add(new EnvShow());
 }
 {
     // keys
-    $application->add(new GenerateCommand());
-    $application->add(new DisplayCommand());
+    $application->add(new KeysGenerate());
+    $application->add(new KeysShow());
 }
 
 // Run application
