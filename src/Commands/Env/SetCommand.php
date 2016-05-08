@@ -1,8 +1,6 @@
 <?php
-namespace Autobahn\Cli\Commands;
+namespace Autobahn\Cli\Commands\Env;
 
-use Autobahn\Cli\Utils\Dotenv;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -10,11 +8,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
- * Class EnvCommand
+ * Class SetCommand
  * Set values to a dotenv file.
  * @package Autobahn\Cli\Commands
  */
-class EnvCommand extends Command
+class SetCommand extends EnvCommand
 {
     /**
      * Configures the current command.
@@ -22,8 +20,8 @@ class EnvCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('env')
-            ->setDescription('Set an environmental variable in the .env file')
+            ->setName('env:set')
+            ->setDescription('Set an environmental variable in the dotenv file')
             ->addArgument(
                 'name',
                 InputArgument::REQUIRED,
@@ -46,13 +44,8 @@ class EnvCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Prefix lines with <code>export</code> so you can source the file in bash'
-            )
-            ->addOption(
-                'file',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Filepath of the dotenv file. Defaults to "./.env".'
             );
+        parent::configure();
     }
 
     /**
@@ -65,7 +58,6 @@ class EnvCommand extends Command
         $value = $input->getOption('value');
         $export = $input->getOption('export');
         $secure = $input->getOption('secure');
-        $file = $input->getOption('file') ?: getcwd() . DIRECTORY_SEPARATOR . '.env';
 
         // questions
         $helper = $this->getHelper('question');
@@ -75,7 +67,7 @@ class EnvCommand extends Command
         ));
 
         // prepare dotenv access
-        $dotenv = new Dotenv($file);
+        $dotenv = $this->getDotenv($this->getFilePath($input));
 
         // abort if overriding
         if ($secure && $dotenv->has($name) && !$helper->ask($input, $output, $override_question)) {
