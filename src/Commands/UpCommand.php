@@ -1,6 +1,7 @@
 <?php
 namespace Autobahn\Cli\Commands;
 
+use Dotenv\Dotenv;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,6 +19,13 @@ class UpCommand extends Command
      * @var Detector
      */
     protected $os;
+
+    /**
+     * Default file name for the dotenv file.
+     *
+     * @var string
+     */
+    protected $fileName = ".env";
 
     /**
      * UpCommand constructor.
@@ -44,16 +52,19 @@ class UpCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // Check if vagrant is available
         if (!$this->isVagrantInstalled()) {
             $output->writeln('<error>Couldn\'t find `vagrant` in PATH. Are you sure Vagrant is installed?</error>');
             return 1;
         }
 
+        // load .env
+        $this->getDotenv(getcwd())->load();
+
         // run vagrant
-        $vagrant = new Process('vagrant up', null, $_ENV + [
-                'WP_HOME' => $this->getWordPressHome(),
-                'VAGRANT_HOSTNAME' => $this->getHostname(),
-            ]);
+        putenv("WP_HOME={$this->getWordPressHome()}");
+        putenv("VAGRANT_HOSTNAME={$this->getHostname()}");
+        $vagrant = new Process('vagrant up', null);
         $vagrant->run(function ($type, $buffer) use ($output) {
             if (Process::ERR === $type) {
                 $buffer = "<error>$buffer</error>";
@@ -91,7 +102,7 @@ class UpCommand extends Command
      */
     protected function getWordPressHome()
     {
-        return getenv('WP_HOME') || 'http://my.autobahn.rocks';
+        return getenv('WP_HOME') ?: 'http://my.autobahn.rocks';
     }
 
     /**
@@ -120,7 +131,16 @@ class UpCommand extends Command
             return "start $url";
         }
 
-        // everything else (mostlikely unix)
+        // everything else (most likely unix)
         return "xdg-open $url";
+    }
+
+    /**
+     * @param $path
+     * @return Dotenv
+     */
+    protected function getDotenv($path)
+    {
+        return new Dotenv($path, $this->fileName);
     }
 }
