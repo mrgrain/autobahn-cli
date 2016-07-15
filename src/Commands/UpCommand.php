@@ -50,7 +50,10 @@ class UpCommand extends Command
         }
 
         // run vagrant
-        $vagrant = new Process('vagrant up', null, ['VAGRANT_HOSTNAME' => $this->getHostname()]);
+        $vagrant = new Process('vagrant up', null, $_ENV + [
+                'WP_HOME' => $this->getWordPressHome(),
+                'VAGRANT_HOSTNAME' => $this->getHostname(),
+            ]);
         $vagrant->run(function ($type, $buffer) use ($output) {
             if (Process::ERR === $type) {
                 $buffer = "<error>$buffer</error>";
