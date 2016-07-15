@@ -9,11 +9,11 @@ use Symfony\Component\Process\Process;
 use Tivie\OS\Detector;
 
 /**
- * Class UpCommand
+ * Class RunCommand
  * Start the vagrant box.
  * @package Autobahn\Cli\Commands
  */
-class UpCommand extends Command
+class RunCommand extends Command
 {
     /**
      * @var Detector
@@ -43,7 +43,7 @@ class UpCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('up')
+            ->setName('run')
             ->setDescription('Starts and provisions the Autobahn vagrant environment');
     }
 
