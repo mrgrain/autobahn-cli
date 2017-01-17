@@ -12,7 +12,7 @@
     "symfony/console": "2.7.* | ^3.0",
     "paragonie/random_compat": "^2.0",
     "vlucas/phpdotenv": "^2.2",
-    "wp-cli/wp-cli": "^0.23",
+    "wp-cli/wp-cli": "^0.23 || ^1.0.0",
     "symfony/process": "^2.8",
     "tivie/php-os-detector": "^1.0"
   },
