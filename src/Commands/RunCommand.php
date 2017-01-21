@@ -2,15 +2,20 @@
 namespace Autobahn\Cli\Commands;
 
 use Dotenv\Dotenv;
+use Dotenv\Exception\InvalidPathException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 use Tivie\OS\Detector;
+use UnexpectedValueException;
 
 /**
  * Class RunCommand
  * Start the vagrant box.
+ *
  * @package Autobahn\Cli\Commands
  */
 class RunCommand extends Command
@@ -28,7 +33,15 @@ class RunCommand extends Command
     protected $fileName = ".env";
 
     /**
+     * Default file name for the dotenv template.
+     *
+     * @var string
+     */
+    protected $templateName = ".env.example";
+
+    /**
      * UpCommand constructor.
+     *
      * @param null|string $name
      */
     public function __construct($name = null)
@@ -44,7 +57,13 @@ class RunCommand extends Command
     {
         $this
             ->setName('run')
-            ->setDescription('Starts and provisions the Autobahn vagrant environment');
+            ->setDescription('Starts and provisions the Autobahn vagrant environment')
+            ->addOption(
+                'copy-env-from',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Path to an .env file to copy if one doesn\'t exist in the current directory.'
+            );
     }
 
     /**
@@ -52,14 +71,36 @@ class RunCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $io = new SymfonyStyle($input, $output);
+
         // Check if vagrant is available
         if (!$this->isVagrantInstalled()) {
-            $output->writeln('<error>Couldn\'t find `vagrant` in PATH. Are you sure Vagrant is installed?</error>');
+            $io->error('Couldn\'t find `vagrant` in PATH. Are you sure Vagrant is installed?');
+            return 1;
+        }
+        if (!$this->hasVagrantfile()) {
+            $io->error('Couldn\'t find local `Vagrantfile`. A vagrant environment is required to run this command.'
+                       . ' Run `vagrant init` to create a new Vagrant environment.'
+                       . ' Or change to a directory with a Vagrantfile and to try again.');
             return 1;
         }
 
+        // create .env
+        if (!file_exists($this->fileName) && $envTemplate = $this->getEnvTemplate($input)) {
+            $io->note("Creating .env from template {$envTemplate}.");
+            try {
+                $this->createEnv($envTemplate);
+            } catch (UnexpectedValueException $exception) {
+                $io->warning("{$exception->getMessage()} Skipping.");
+            }
+        }
+
         // load .env
-        $this->getDotenv(getcwd())->load();
+        try {
+            $this->getDotenv(getcwd())->load();
+        } catch (InvalidPathException $exception) {
+            $io->note("No .env file found. Falling back to environment.");
+        }
 
         // run vagrant
         putenv("WP_HOME={$this->getWordPressHome()}");
@@ -86,6 +127,7 @@ class RunCommand extends Command
 
     /**
      * Test if vagrant is installed or not.
+     *
      * @return boolean
      */
     protected function isVagrantInstalled()
@@ -97,7 +139,18 @@ class RunCommand extends Command
     }
 
     /**
+     * Test if a Vagrantfile is present.
+     *
+     * @return boolean
+     */
+    protected function hasVagrantfile()
+    {
+        return file_exists(getcwd() . DIRECTORY_SEPARATOR . 'Vagrantfile');
+    }
+
+    /**
      * Get the value of the WP_HOME constant
+     *
      * @return string
      */
     protected function getWordPressHome()
@@ -107,6 +160,7 @@ class RunCommand extends Command
 
     /**
      * Get the hostname for the WordPress install
+     *
      * @return string
      */
     protected function getHostname()
@@ -116,7 +170,9 @@ class RunCommand extends Command
 
     /**
      * Find the right command to launch a url on a platform.
+     *
      * @param string $url
+     *
      * @return string
      */
     protected function getBrowserCommand($url)
@@ -137,10 +193,37 @@ class RunCommand extends Command
 
     /**
      * @param $path
+     *
      * @return Dotenv
      */
     protected function getDotenv($path)
     {
         return new Dotenv($path, $this->fileName);
+    }
+
+    /**
+     * Get the path to copy the .env template from.
+     *
+     * @param InputInterface $input
+     *
+     * @return false|string
+     */
+    protected function getEnvTemplate(InputInterface $input)
+    {
+        return $input->getOption('copy-env-from') ?: getcwd() . DIRECTORY_SEPARATOR . $this->templateName;
+    }
+
+    /**
+     * Copies the template .env file.
+     *
+     * @param $envTemplate
+     *
+     * @throws UnexpectedValueException
+     */
+    private function createEnv($envTemplate)
+    {
+        if (!@copy($envTemplate, $this->fileName)) {
+            throw new UnexpectedValueException("Could not read from {$envTemplate}.");
+        }
     }
 }
