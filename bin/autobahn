@@ -20,7 +20,7 @@ foreach ($paths as $path) {
 }
 
 // Setup application
-$application = new Application('Autobahn CLI', '0.2.2');
+$application = new Application('Autobahn CLI', '0.2.3');
 
 // commands
 {
